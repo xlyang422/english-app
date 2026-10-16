@@ -1,0 +1,975 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Word Quest：英語冒險王 (終極修復版)</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --primary: #6366f1;
+            --primary-hover: #4f46e5;
+            --accent: #f59e0b;
+            --danger: #ef4444;
+            --success: #10b981;
+            --text: #f8fafc;
+            --text-muted: #94a3b8;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+            background-color: var(--card-bg);
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+            padding: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 15px;
+        }
+
+        .title-area h1 {
+            font-size: 1.5rem;
+            color: var(--accent);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .stats-badge {
+            background: rgba(99, 102, 241, 0.2);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            color: #a5b4fc;
+            border: 1px solid rgba(99, 102, 241, 0.4);
+        }
+
+        .screen {
+            display: none;
+        }
+
+        .screen.active {
+            display: block;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .hero-desc {
+            color: var(--text-muted);
+            margin-bottom: 15px;
+            line-height: 1.5;
+            font-size: 0.95rem;
+        }
+
+        .mode-selection-box {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 14px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .mode-selection-box h4 {
+            font-size: 0.95rem;
+            color: var(--accent);
+            margin-bottom: 10px;
+        }
+
+        .mode-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .mode-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid transparent;
+            padding: 10px;
+            border-radius: 10px;
+            color: var(--text);
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.2s;
+            font-size: 0.85rem;
+        }
+
+        .mode-card:hover {
+            background: rgba(99, 102, 241, 0.15);
+        }
+
+        .mode-card.selected {
+            border-color: var(--primary);
+            background: rgba(99, 102, 241, 0.25);
+        }
+
+        .mode-card .m-title {
+            font-weight: bold;
+            margin-bottom: 2px;
+        }
+
+        .mode-card .m-desc {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .level-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 15px;
+            max-height: 200px;
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+
+        .level-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 10px;
+            border-radius: 10px;
+            color: var(--text);
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.2s;
+        }
+
+        .level-btn:hover {
+            background: rgba(99, 102, 241, 0.2);
+            border-color: var(--primary);
+        }
+
+        .level-btn .lvl-title {
+            font-weight: bold;
+            font-size: 0.9rem;
+            margin-bottom: 2px;
+        }
+
+        .level-btn .lvl-sub {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+        }
+
+        .game-status-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            font-size: 0.9rem;
+        }
+
+        .streak-badge {
+            color: var(--accent);
+            font-weight: bold;
+        }
+
+        .timer-container {
+            width: 100%;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .timer-fill {
+            height: 100%;
+            background: var(--primary);
+            width: 100%;
+            transition: width 0.1s linear;
+        }
+
+        .card-box {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .audio-trigger-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            width: 65px;
+            height: 65px;
+            border-radius: 50%;
+            font-size: 1.6rem;
+            cursor: pointer;
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+            margin-bottom: 12px;
+            transition: transform 0.2s;
+        }
+
+        .audio-trigger-btn:hover {
+            transform: scale(1.08);
+            background: var(--primary-hover);
+        }
+
+        .mic-btn {
+            background: var(--danger);
+            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
+        }
+        .mic-btn.listening {
+            animation: pulse 1.2s infinite;
+            background: #dc2626;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            70% { transform: scale(1.08); box-shadow: 0 0 0 15px rgba(239, 68, 68, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+
+        .prompt-text {
+            font-size: 1.1rem;
+            font-weight: bold;
+            margin-bottom: 6px;
+        }
+
+        .prompt-sub {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+        }
+
+        .option-btn {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 12px 16px;
+            border-radius: 12px;
+            color: var(--text);
+            cursor: pointer;
+            font-size: 0.95rem;
+            text-align: left;
+            transition: all 0.2s;
+        }
+
+        .option-btn:hover:not(:disabled) {
+            background: rgba(255, 255, 255, 0.12);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .option-btn.correct {
+            background: rgba(16, 185, 129, 0.25) !important;
+            border-color: var(--success) !important;
+            color: #6ee7b7;
+        }
+
+        .option-btn.wrong {
+            background: rgba(239, 68, 68, 0.25) !important;
+            border-color: var(--danger) !important;
+            color: #fca5a5;
+        }
+
+        .action-btn {
+            width: 100%;
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+            margin-top: 12px;
+        }
+
+        .action-btn:hover {
+            background: var(--primary-hover);
+        }
+
+        .dual-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .btn-yes { background: var(--success); }
+        .btn-yes:hover { background: #059669; }
+
+        .btn-no { background: var(--danger); }
+        .btn-no:hover { background: #dc2626; }
+
+        .result-box {
+            text-align: center;
+            padding: 10px 0;
+        }
+
+        .result-title {
+            font-size: 1.6rem;
+            color: var(--accent);
+            margin-bottom: 8px;
+        }
+
+        .result-stats {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            padding: 15px;
+            margin: 15px 0;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            text-align: left;
+        }
+
+        .result-stats p {
+            margin: 6px 0;
+            font-size: 0.9rem;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .feedback-tag {
+            display: inline-block;
+            margin-top: 8px;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            background: rgba(245, 158, 11, 0.2);
+            color: var(--accent);
+            border: 1px solid rgba(245, 158, 11, 0.4);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="title-area">
+                <h1>🛡️ Word Quest</h1>
+            </div>
+            <div class="stats-badge" id="player-title">階級：學徒</div>
+        </header>
+
+        <!-- 首頁：遊戲模式與關卡選擇 -->
+        <div id="screen-home" class="screen active">
+            <p class="hero-desc">歡迎來到英文冒險王！請先選擇你喜歡的挑戰模式，再選擇下方關卡開始冒險：</p>
+            
+            <div class="mode-selection-box">
+                <h4>🎯 選擇遊戲模式：</h4>
+                <div class="mode-grid">
+                    <div class="mode-card selected" id="mcard-mix" onclick="selectGameMode('mix')">
+                        <div class="m-title">⚔️ 混合冒險</div>
+                        <div class="m-desc">隨機出題（聽+讀+說）</div>
+                    </div>
+                    <div class="mode-card" id="mcard-listen" onclick="selectGameMode('listen')">
+                        <div class="m-title">🔊 耳力大考驗</div>
+                        <div class="m-desc">純聽音辨識中文</div>
+                    </div>
+                    <div class="mode-card" id="mcard-eagle" onclick="selectGameMode('eagle')">
+                        <div class="m-title">👁️ 鷹眼抓包</div>
+                        <div class="m-desc">字音是否相符判斷</div>
+                    </div>
+                    <div class="mode-card" id="mcard-speak" onclick="selectGameMode('speak')">
+                        <div class="m-title">🎤 龍吼發音陣</div>
+                        <div class="m-desc">開口說單字口語評分</div>
+                    </div>
+                </div>
+            </div>
+
+            <h4 style="margin-bottom: 8px; font-size: 0.95rem; color: var(--text-muted);">選擇冒險關卡 (每關10字)：</h4>
+            <div class="level-grid" id="level-container"></div>
+            <button class="action-btn" onclick="startReviewMode()" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15);">進入錯題魔王城複習</button>
+        </div>
+
+        <!-- 遊戲主畫面 -->
+        <div id="screen-game" class="screen">
+            <div class="game-status-bar">
+                <span id="progress-indicator">進度: 1/10</span>
+                <span class="hp-badge" id="hp-display">❤️❤️❤️</span>
+                <span class="streak-badge" id="streak-display">🔥 連擊 x0</span>
+            </div>
+            <div class="timer-container">
+                <div class="timer-fill" id="timer-fill"></div>
+            </div>
+
+            <div id="quiz-container"></div>
+            <button class="action-btn" id="btn-giveup" onclick="returnToHome()" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); margin-top: 20px;">放棄關卡回到大廳</button>
+        </div>
+
+        <!-- 結算畫面 -->
+        <div id="screen-result" class="screen">
+            <div class="result-box">
+                <div class="result-title" id="res-header-title">🎉 關卡勝利！</div>
+                <div class="feedback-tag" id="res-rank-tag">獲得稱號：冒險先鋒</div>
+                
+                <div class="result-stats">
+                    <p><span>正確題數：</span><strong id="res-correct">8 / 10</strong></p>
+                    <p><span>準確率：</span><strong id="res-accuracy">80%</strong></p>
+                    <p><span>最高連擊：</span><strong id="res-streak">5 連擊</strong></p>
+                    <p><span>收錄錯題：</span><strong id="res-mistakes">2 題</strong></p>
+                </div>
+
+                <button class="action-btn" id="btn-return-home" onclick="returnToHome()">返回大廳</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const wordDatabase = [
+            [
+                { word: "efficient", meaning: "效率高的", category: "職場" },
+                { word: "collaborate", meaning: "合作、協同", category: "職場" },
+                { word: "priority", meaning: "優先事項", category: "職場" },
+                { word: "feedback", meaning: "回饋、意見", category: "職場" },
+                { word: "negotiate", meaning: "談判、協商", category: "職場" },
+                { word: "deadline", meaning: "截止期限", category: "職場" },
+                { word: "strategy", meaning: "策略、戰略", category: "職場" },
+                { word: "innovative", meaning: "創新的", category: "職場" },
+                { word: "objective", meaning: "目標、客觀的", category: "職場" },
+                { word: "delegate", meaning: "授權、委派", category: "職場" }
+            ],
+            [
+                { word: "resilience", meaning: "恢復力、韌性", category: "心靈" },
+                { word: "boundary", meaning: "邊界、界線", category: "心靈" },
+                { word: "autonomous", meaning: "自主的、獨立的", category: "心靈" },
+                { word: "vulnerable", meaning: "脆弱的、易受傷的", category: "心靈" },
+                { word: "perspective", meaning: "觀點、視角", category: "心靈" },
+                { word: "integrity", meaning: "正直、誠實", category: "心靈" },
+                { word: "persevere", meaning: "堅持不懈", category: "心靈" },
+                { word: "mindfulness", meaning: "正念、專注當下", category: "心靈" },
+                { word: "adaptable", meaning: "具適應力的", category: "心靈" },
+                { word: "assertion", meaning: "堅決主張、自信", category: "心靈" }
+            ],
+            [
+                { word: "jet lag", meaning: "時差", category: "生活" },
+                { word: "itinerary", meaning: "行程表、旅行指南", category: "生活" },
+                { word: "souvenir", meaning: "紀念品", category: "生活" },
+                { word: "reservation", meaning: "預約、預訂", category: "生活" },
+                { word: "complimentary", meaning: "免費招待的、讚賞的", category: "生活" },
+                { word: "breathtaking", meaning: "屏息的、極美的", category: "生活" },
+                { word: "convenient", meaning: "便利的", category: "生活" },
+                { word: "destination", meaning: "目的地", category: "生活" },
+                { word: "authentic", meaning: "地道的、真實的", category: "生活" },
+                { word: "expedition", meaning: "遠征、探險", category: "生活" }
+            ],
+            [
+                { word: "algorithm", meaning: "演算法", category: "科技" },
+                { word: "cybersecurity", meaning: "網路安全", category: "科技" },
+                { word: "automation", meaning: "自動化", category: "科技" },
+                { word: "innovation", meaning: "革新、創新", category: "科技" },
+                { word: "encryption", meaning: "加密", category: "科技" },
+                { word: "bandwidth", meaning: "頻寬、精力限度", category: "科技" },
+                { word: "database", meaning: "資料庫", category: "科技" },
+                { word: "interface", meaning: "介面", category: "科技" },
+                { word: "scalable", meaning: "可擴充的", category: "科技" },
+                { word: "deployment", meaning: "部署、配置", category: "科技" }
+            ],
+            [
+                { word: "hypothesis", meaning: "假設、假說", category: "學術" },
+                { word: "phenomenon", meaning: "現象", category: "學術" },
+                { word: "controversial", meaning: "具爭議性的", category: "學術" },
+                { word: "fundamental", meaning: "根本的、基礎的", category: "學術" },
+                { word: "significant", meaning: "顯著的、重要的", category: "學術" },
+                { word: "correlation", meaning: "關聯性、相關性", category: "學術" },
+                { word: "interpretation", meaning: "解釋、詮釋", category: "學術" },
+                { word: "consequence", meaning: "結果、後果", category: "學術" },
+                { word: "comprehensive", meaning: "全面的、廣泛的", category: "學術" },
+                { word: "evaluate", meaning: "評估、評價", category: "學術" }
+            ],
+            [
+                { word: "implement", meaning: "實施、執行", category: "動詞" },
+                { word: "facilitate", meaning: "促進、使容易", category: "動詞" },
+                { word: "fluctuate", meaning: "波動、起伏", category: "動詞" },
+                { word: "accumulate", meaning: "累積、積聚", category: "動詞" },
+                { word: "ameliorate", meaning: "改善、改良", category: "動詞" },
+                { word: "substantiate", meaning: "證明、證實", category: "動詞" },
+                { word: "deteriorate", meaning: "惡化、變壞", category: "動詞" },
+                { word: "synthesize", meaning: "綜合、合成", category: "動詞" },
+                { word: "undermine", meaning: "暗中破壞、削弱", category: "動詞" },
+                { word: "acknowledge", meaning: "承認、答謝", category: "動詞" }
+            ],
+            [
+                { word: "empathy", meaning: "同理心", category: "情感" },
+                { word: "resentment", meaning: "怨恨、不滿", category: "情感" },
+                { word: "nostalgia", meaning: "鄉愁、懷舊", category: "情感" },
+                { word: "apprehension", meaning: "憂慮、不安", category: "情感" },
+                { word: "compassion", meaning: "同情、憐憫", category: "情感" },
+                { word: "enthusiasm", meaning: "熱情、熱忱", category: "情感" },
+                { word: "skeptical", meaning: "懷疑的", category: "情感" },
+                { word: "vulnerability", meaning: "脆弱性", category: "情感" },
+                { word: "reassurance", meaning: "安慰、定心丸", category: "情感" },
+                { word: "indifferent", meaning: "冷漠的、不在乎的", category: "情感" }
+            ],
+            [
+                { word: "win-win", meaning: "雙贏的", category: "商務" },
+                { word: "cutting edge", meaning: "尖端、最新銳", category: "商務" },
+                { word: "in the long run", meaning: "從長遠來看", category: "商務" },
+                { word: "take into account", meaning: "把...考慮在內", category: "商務" },
+                { word: "up in the air", meaning: "尚未決定、懸而未決", category: "商務" },
+                { word: "bottom line", meaning: "底線、最終盈虧", category: "商務" },
+                { word: "ballpark figure", meaning: "大略估計數", category: "商務" },
+                { word: "call it a day", meaning: "今天就到此為止", category: "商務" },
+                { word: "strategic alliance", meaning: "戰略聯盟", category: "商務" },
+                { word: "sustainable development", meaning: "永續發展", category: "商務" }
+            ],
+            [
+                { word: "meticulous", meaning: "一絲不苟的、細緻的", category: "形容詞" },
+                { word: "spontaneous", meaning: "自發性的、即興的", category: "形容詞" },
+                { word: "ambiguous", meaning: "模稜兩可的", category: "形容詞" },
+                { word: "inevitable", meaning: "無可避免的", category: "形容詞" },
+                { word: "superficial", meaning: "表面的、膚淺的", category: "形容詞" },
+                { word: "pragmatic", meaning: "務實的", category: "形容詞" },
+                { word: "diligent", meaning: "勤奮的", category: "形容詞" },
+                { word: "versatile", meaning: "多才多藝的、多用途的", category: "形容詞" },
+                { word: "transparent", meaning: "透明的、公開的", category: "形容詞" },
+                { word: "relentless", meaning: "不間斷的、嚴厲的", category: "形容詞" }
+            ],
+            [
+                { word: "paradigm shift", meaning: "典範轉移", category: "高階" },
+                { word: "leverage resources", meaning: "善用資源", category: "高階" },
+                { word: "mitigate risk", meaning: "降低風險", category: "高階" },
+                { word: "streamline process", meaning: "簡化流程", category: "高階" },
+                { word: "benchmark performance", meaning: "基準效能對比", category: "高階" },
+                { word: "fostering growth", meaning: "促進成長", category: "高階" },
+                { word: "pioneering spirit", meaning: "開創精神", category: "高階" },
+                { word: "seamless integration", meaning: "無縫整合", category: "高階" },
+                { word: "fostering resilience", meaning: "培養韌性", category: "高階" },
+                { word: "optimizing workflow", meaning: "最佳化工作流程", category: "高階" }
+            ]
+        ];
+
+        let selectedMode = 'mix';
+        let currentLevelIndex = 0;
+        let currentQuestionIndex = 0;
+        let currentQuestionsList = [];
+        let scoreCorrect = 0;
+        let currentStreak = 0;
+        let maxStreak = 0;
+        let playerHp = 3;
+        let mistakesList = [];
+        let isReviewMode = false;
+        let timerInterval = null;
+        let timeLeft = 100;
+        let recognition = null;
+        let voices = [];
+
+        function loadVoices() {
+            if ('speechSynthesis' in window) {
+                voices = window.speechSynthesis.getVoices();
+            }
+        }
+
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.onvoiceschanged = loadVoices;
+            loadVoices();
+        }
+
+        function initHome() {
+            const container = document.getElementById('level-container');
+            container.innerHTML = '';
+            
+            wordDatabase.forEach((lvl, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'level-btn';
+                btn.innerHTML = `
+                    <div class="lvl-title">第 ${index + 1} 關：${lvl[0].category}領域</div>
+                    <div class="lvl-sub">包含 10 個核心單字/片語</div>
+                `;
+                btn.onclick = () => startLevel(index);
+                container.appendChild(btn);
+            });
+            updatePlayerTitle();
+            initSpeechRecognition();
+        }
+
+        function selectGameMode(mode) {
+            selectedMode = mode;
+            document.querySelectorAll('.mode-card').forEach(card => card.classList.remove('selected'));
+            document.getElementById(`mcard-${mode}`).classList.add('selected');
+        }
+
+        function updatePlayerTitle() {
+            const titles = ["學徒", "冒險先鋒", "精靈法師", "傳說語言大師"];
+            let tIndex = Math.min(Math.floor(currentLevelIndex / 3), titles.length - 1);
+            document.getElementById('player-title').innerText = `階級：${titles[tIndex]}`;
+        }
+
+        function startLevel(levelIdx) {
+            isReviewMode = false;
+            currentLevelIndex = levelIdx;
+            currentQuestionsList = [...wordDatabase[levelIdx]];
+            initGameSession();
+        }
+
+        function startReviewMode() {
+            if (mistakesList.length === 0) {
+                alert("目前沒有錯題魔王城的記錄！先去挑戰關卡累積錯題吧！");
+                return;
+            }
+            isReviewMode = true;
+            currentQuestionsList = [...mistakesList];
+            mistakesList = [];
+            initGameSession();
+        }
+
+        function initGameSession() {
+            currentQuestionIndex = 0;
+            scoreCorrect = 0;
+            currentStreak = 0;
+            maxStreak = 0;
+            playerHp = 3;
+
+            document.getElementById('screen-home').classList.remove('active');
+            document.getElementById('screen-result').classList.remove('active');
+            document.getElementById('screen-game').classList.add('active');
+
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            if (currentQuestionIndex >= currentQuestionsList.length || playerHp <= 0) {
+                endGame();
+                return;
+            }
+
+            updateStatusBar();
+            resetTimer();
+
+            // 確保每次換題時「放棄按鈕」可用
+            const giveupBtn = document.getElementById('btn-giveup');
+            if (giveupBtn) giveupBtn.disabled = false;
+
+            const qData = currentQuestionsList[currentQuestionIndex];
+            const quizContainer = document.getElementById('quiz-container');
+            quizContainer.innerHTML = '';
+
+            let modeToRun = selectedMode;
+            if (selectedMode === 'mix') {
+                const modes = ['listen', 'eagle', 'speak'];
+                modeToRun = modes[Math.floor(Math.random() * modes.length)];
+            }
+
+            if (modeToRun === 'listen') {
+                renderListenQuiz(qData, quizContainer);
+            } else if (modeToRun === 'eagle') {
+                renderEagleQuiz(qData, quizContainer);
+            } else {
+                renderSpeakQuiz(qData, quizContainer);
+            }
+        }
+
+        function updateStatusBar() {
+            document.getElementById('progress-indicator').innerText = `進度: ${currentQuestionIndex + 1} / ${currentQuestionsList.length}`;
+            document.getElementById('hp-display').innerText = '❤️'.repeat(playerHp) + '🖤'.repeat(3 - playerHp);
+            document.getElementById('streak-display').innerText = `🔥 連擊 x${currentStreak}`;
+        }
+
+        function renderListenQuiz(targetObj, container) {
+            let options = [targetObj];
+            while (options.length < 4) {
+                let randomLvl = wordDatabase[Math.floor(Math.random() * wordDatabase.length)];
+                let randomWord = randomLvl[Math.floor(Math.random() * randomLvl.length)];
+                if (!options.includes(randomWord)) {
+                    options.push(randomWord);
+                }
+            }
+            options.sort(() => Math.random() - 0.5);
+
+            container.innerHTML = `
+                <div class="card-box">
+                    <button class="audio-trigger-btn" onclick="speakWord('${targetObj.word}')" title="點擊聆聽發音">🔊</button>
+                    <div class="prompt-text">【耳力大考驗】聽發音選出正確中文含意</div>
+                    <div class="prompt-sub">${targetObj.category}領域單字 (點喇叭聽發音)</div>
+                </div>
+                <div class="options-grid" id="options-grid"></div>
+            `;
+
+            const grid = document.getElementById('options-grid');
+            options.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerText = opt.meaning;
+                // 傳遞實際字串，修正物件傳遞失效的問題
+                btn.onclick = () => checkAnswer(opt.word === targetObj.word, targetObj, btn);
+                grid.appendChild(btn);
+            });
+
+            setTimeout(() => speakWord(targetObj.word), 300);
+        }
+
+        function renderEagleQuiz(targetObj, container) {
+            let isMatch = Math.random() > 0.4;
+            let spokenWord = targetObj.word;
+            let displayWord = targetObj.word;
+            let displayMeaning = targetObj.meaning;
+
+            if (!isMatch) {
+                let randomLvl = wordDatabase[Math.floor(Math.random() * wordDatabase.length)];
+                let fakeWord = randomLvl[Math.floor(Math.random() * randomLvl.length)];
+                spokenWord = fakeWord.word;
+            }
+
+            container.innerHTML = `
+                <div class="card-box">
+                    <button class="audio-trigger-btn" onclick="speakWord('${spokenWord.replace(/'/g, "\\'")}', 0.8)">🔊</button>
+                    <div class="prompt-text">【鷹眼抓包】畫面文字與播放的語音是否相符？</div>
+                    <div style="font-size: 1.2rem; color: var(--accent); margin: 8px 0;"><strong>${displayWord}</strong> (${displayMeaning})</div>
+                </div>
+                <div class="dual-buttons">
+                    <button class="action-btn btn-yes" id="eagle-yes-btn">✓ 吻合 (正確)</button>
+                    <button class="action-btn btn-no" id="eagle-no-btn">✕ 不吻合 (抓包)</button>
+                </div>
+            `;
+
+            // 使用獨立事件監聽器確保按鈕點擊完美觸發
+            document.getElementById('eagle-yes-btn').onclick = () => checkAnswer(isMatch === true, targetObj, document.getElementById('eagle-yes-btn'));
+            document.getElementById('eagle-no-btn').onclick = () => checkAnswer(isMatch === false, targetObj, document.getElementById('eagle-no-btn'));
+
+            setTimeout(() => speakWord(spokenWord, 0.8), 300);
+        }
+
+        function renderSpeakQuiz(targetObj, container) {
+            container.innerHTML = `
+                <div class="card-box">
+                    <button class="audio-trigger-btn mic-btn" id="mic-trigger-btn" onclick="startVoiceRecognition('${targetObj.word.replace(/'/g, "\\'")}')" title="點擊並唸出單字">🎤</button>
+                    <div class="prompt-text">【龍吼發音陣】請點擊麥克風並口述單字</div>
+                    <div style="font-size: 1.2rem; color: var(--accent); margin: 8px 0;" id="speak-target-display"><strong>${targetObj.word}</strong></div>
+                    <div class="prompt-sub" id="speak-feedback-sub">含意：${targetObj.meaning} (點擊按鈕後清晰唸出英文)</div>
+                </div>
+                <button class="action-btn" onclick="skipSpeakQuestion('${targetObj.word.replace(/'/g, "\\'")}')" style="background: rgba(255,255,255,0.08); font-size: 0.9rem;">聽示範發音</button>
+            `;
+        }
+
+        function initSpeechRecognition() {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) return;
+            recognition = new SpeechRecognition();
+            recognition.lang = 'en-US';
+            recognition.interimResults = false;
+            recognition.maxAlternatives = 3;
+        }
+
+        function startVoiceRecognition(targetWord) {
+            if (!recognition) {
+                alert("你的瀏覽器不支援語音辨識功能，請使用 Google Chrome 瀏覽器！");
+                return;
+            }
+
+            const micBtn = document.getElementById('mic-trigger-btn');
+            const subText = document.getElementById('speak-feedback-sub');
+            if (micBtn) micBtn.classList.add('listening');
+            if (subText) subText.innerText = "聆聽中... 請清晰說出英文單字！";
+
+            recognition.onresult = (event) => {
+                if (micBtn) micBtn.classList.remove('listening');
+                let transcript = event.results[0][0].transcript.trim().toLowerCase();
+                let cleanTarget = targetWord.trim().toLowerCase();
+                
+                let isPassed = transcript.includes(cleanTarget) || cleanTarget.includes(transcript);
+
+                if (isPassed) {
+                    if (subText) subText.innerHTML = `✅ 辨識成功：「${transcript}」！`;
+                    checkAnswer(true, { word: targetWord }, null);
+                } else {
+                    if (subText) subText.innerHTML = `❌ 辨識為：「${transcript}」，正確應為 ${targetWord}`;
+                    checkAnswer(false, { word: targetWord, meaning: "" }, null);
+                }
+            };
+
+            recognition.onerror = () => {
+                if (micBtn) micBtn.classList.remove('listening');
+                if (subText) subText.innerText = "⚠️ 語音辨識超時或無聲音，請再試一次！";
+            };
+
+            recognition.onend = () => {
+                if (micBtn) micBtn.classList.remove('listening');
+            };
+
+            try {
+                recognition.start();
+            } catch (e) {
+                recognition.abort();
+                recognition.start();
+            }
+        }
+
+        function skipSpeakQuestion(targetWord) {
+            speakWord(targetWord);
+            const sub = document.getElementById('speak-feedback-sub');
+            if (sub) sub.innerText = `已播放示範發音，請再嘗試點擊麥克風讀出！`;
+        }
+
+        function checkAnswer(isCorrect, targetObj, clickedElement) {
+            stopTimer();
+            const allBtns = document.querySelectorAll('.option-btn, .dual-buttons button, .action-btn');
+            allBtns.forEach(b => { if(!b.classList.contains('audio-trigger-btn')) b.disabled = true; });
+
+            if (isCorrect) {
+                scoreCorrect++;
+                currentStreak++;
+                if (currentStreak > maxStreak) maxStreak = currentStreak;
+                if (clickedElement && clickedElement.classList.contains('option-btn')) {
+                    clickedElement.classList.add('correct');
+                } else if (clickedElement && clickedElement.classList.contains('action-btn')) {
+                    clickedElement.style.background = 'var(--success)';
+                }
+            } else {
+                playerHp--;
+                currentStreak = 0;
+                if (!mistakesList.includes(targetObj)) {
+                    mistakesList.push(targetObj);
+                }
+                if (clickedElement && clickedElement.classList.contains('option-btn')) {
+                    clickedElement.classList.add('wrong');
+                } else if (clickedElement && clickedElement.classList.contains('action-btn')) {
+                    clickedElement.style.background = 'var(--danger)';
+                }
+            }
+
+            updateStatusBar();
+
+            setTimeout(() => {
+                currentQuestionIndex++;
+                loadQuestion();
+            }, 1500);
+        }
+
+        function speakWord(text, rate = 0.9) {
+            if (!('speechSynthesis' in window)) return;
+            
+            try {
+                window.speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'en-US';
+                utterance.rate = rate;
+
+                if (voices.length === 0) {
+                    voices = window.speechSynthesis.getVoices();
+                }
+                const enVoice = voices.find(v => v.lang.includes('en') || v.lang.includes('US') || v.lang.includes('GB'));
+                if (enVoice) utterance.voice = enVoice;
+
+                window.speechSynthesis.speak(utterance);
+            } catch (e) {
+                console.log("語音播放跳過：", e);
+            }
+        }
+
+        function resetTimer() {
+            stopTimer();
+            timeLeft = 100;
+            const fill = document.getElementById('timer-fill');
+            if (fill) fill.style.width = '100%';
+
+            timerInterval = setInterval(() => {
+                timeLeft -= 1.0; 
+                if (fill) fill.style.width = timeLeft + '%';
+
+                if (timeLeft <= 0) {
+                    stopTimer();
+                    if(recognition) try { recognition.abort(); } catch(e){}
+                    const qData = currentQuestionsList[currentQuestionIndex];
+                    playerHp--;
+                    currentStreak = 0;
+                    if (!mistakesList.includes(qData)) mistakesList.push(qData);
+                    updateStatusBar();
+                    
+                    setTimeout(() => {
+                        currentQuestionIndex++;
+                        loadQuestion();
+                    }, 1000);
+                }
+            }, 120);
+        }
+
+        function stopTimer() {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+        }
+
+        function endGame() {
+            stopTimer();
+            if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+            if (recognition) try { recognition.abort(); } catch(e){}
+
+            document.getElementById('screen-game').classList.remove('active');
+            document.getElementById('screen-result').classList.add('active');
+
+            const homeBtn = document.getElementById('btn-return-home');
+            if (homeBtn) homeBtn.disabled = false;
+
+            const totalQ = currentQuestionsList.length;
+            const accuracy = totalQ > 0 ? Math.round((scoreCorrect / totalQ) * 100) : 0;
+
+            document.getElementById('res-correct').innerText = `${scoreCorrect} / ${totalQ}`;
+            document.getElementById('res-accuracy').innerText = `${accuracy}%`;
+            document.getElementById('res-streak').innerText = `${maxStreak} 連擊`;
+            document.getElementById('res-mistakes').innerText = `${mistakesList.length} 題`;
+
+            let titleMsg = "🎉 冒險大勝利！";
+            if (playerHp <= 0) {
+                titleMsg = "💀 遭遇魔王反擊，生命耗盡！";
+            } else if (accuracy < 60) {
+                titleMsg = "⚡ 冒險勉強過關，還需多加特訓！";
+            }
+            document.getElementById('res-header-title').innerText = titleMsg;
+            document.getElementById('res-rank-tag').innerText = `本次最高連擊：🔥 x${maxStreak}`;
+        }
+
+        function returnToHome() {
+            stopTimer();
+            if ('speechSynthesis' in window) {
+                try { window.speechSynthesis.cancel(); } catch(e){}
+            }
+            if (recognition) {
+                try { recognition.abort(); } catch(e){}
+            }
+
+            document.querySelectorAll('button').forEach(btn => {
+                btn.disabled = false;
+            });
+
+            document.getElementById('screen-game').classList.remove('active');
+            document.getElementById('screen-result').classList.remove('active');
+            document.getElementById('screen-home').classList.add('active');
+
+            initHome();
+        }
+
+        window.onload = initHome;
+    </script>
+</body>
+</html>
